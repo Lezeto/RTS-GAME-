@@ -79,6 +79,63 @@ const Game = () => {
   const [houseLevel, setHouseLevel] = useState(1);
   const [resourceCost, setResourceCost] = useState(10);
 
+  const targetDate = new Date("2025-02-09T10:00:00");
+  const [secondsElapsed, setSecondsElapsed] = useState(() => {
+    return Math.floor((Date.now() - targetDate) / 1000);
+  });
+
+  const saveGame = () => {
+    const gameData = {
+      character,
+      missionResult,
+      easyMissionCooldown,
+      hardMissionCooldown,
+      resources,
+      increments,
+      incrementCosts,
+      houseLevel,
+      resourceCost,
+      lastSaved: Date.now(),
+    };
+    localStorage.setItem("gameData", JSON.stringify(gameData));
+    setLastSaved(Date.now());
+  };
+
+  const loadGame = () => {
+    const savedData = JSON.parse(localStorage.getItem("gameData"));
+    if (savedData) {
+      const currentTime = Date.now();
+      const timeOffline = (currentTime - savedData.lastSaved) / 1000;
+      let offlineResources = {};
+      for (const resource in savedData.resources) {
+          offlineResources[resource] = timeOffline * savedData.increments[resource];
+      }
+
+      setResources((prevResources) => {
+          const updatedResources = { ...prevResources };
+          for (const resource in offlineResources) {
+              updatedResources[resource] = parseFloat((savedData.resources[resource] + offlineResources[resource]).toFixed(2)); 
+          }
+          return updatedResources;
+      });
+
+
+
+      setCharacter(savedData.character);
+      setMissionResult(savedData.missionResult);
+      setEasyMissionCooldown(savedData.easyCooldown);
+      setHardMissionCooldown(savedData.hardMissionCooldown);
+      setIncrements(savedData.increments);
+      setIncrementCosts(savedData.incrementCosts);
+      setHouseLevel(savedData.houseLevel);
+      setResourceCost(savedData.resourceCost);
+      setSecondsElapsed(savedData.secondsElapsed);
+      
+    }
+  };
+
+
+
   useEffect(() => {
     const intervals = {};
     for (const resource in resources) {
@@ -506,6 +563,10 @@ const Game = () => {
               className="house-icon"
             />
           </div>
+          <div className="save-load-buttons">
+                <button className="save-button" onClick={saveGame}>Save Game</button>
+                <button className="load-button" onClick={loadGame}>Load Game</button>
+            </div>
         </div>
         <div className="left-panel">
           <div className="character-section">
